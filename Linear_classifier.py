@@ -82,7 +82,7 @@ class SVM:
 class Softmax(SVM):
 	def forward(self):
 		self.YT = self.XT.dot(self.W)
-		# SVM
+
 		self.grad_YT = np.zeros_like(self.YT)
 
 		score_max = np.max(self.YT, axis=1).reshape(self.N, 1)
