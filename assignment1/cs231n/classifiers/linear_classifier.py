@@ -11,16 +11,16 @@ class LinearClassifier(object):
 	def __init__(self):
 		self.W = None
 
-	def train(self, X, y, learning_rate=1e-3, reg=1e-5, num_iters=100,
+	def train(self, XT, y, learning_rate=1e-3, reg=1e-5, num_iters=100,
 						batch_size=200, verbose=False):
 		"""
 		Train this linear classifier using stochastic gradient descent.
 
 		Inputs:
-		- X: A numpy array of shape (N, D) containing training data; there are N
+		- XT: A numpy array of shape (N, D) containing training data; there are N
 			training samples each of dimension D.
 		- y: A numpy array of shape (N,) containing training labels; y[i] = c
-			means that X[i] has label 0 <= c < C for C classes.
+			means that XT[i] has label 0 <= c < C for C classes.
 		- learning_rate: (float) learning rate for optimization.
 		- reg: (float) regularization strength.
 		- num_iters: (integer) number of steps to take when optimizing
@@ -30,7 +30,7 @@ class LinearClassifier(object):
 		Outputs:
 		A list containing the value of the loss function at each training iteration.
 		"""
-		num_train, dim = X.shape
+		num_train, dim = XT.shape
 		num_classes = np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
 		if self.W is None:
 			# lazily initialize W
@@ -53,7 +53,9 @@ class LinearClassifier(object):
 			# Hint: Use np.random.choice to generate indices. Sampling with         #
 			# replacement is faster than sampling without replacement.              #
 			#########################################################################
-			pass
+			random_index = np.random.choice(num_train, size=batch_size, replace=False)
+			X_batch = XT[random_index,].T
+			y_batch = y[random_index]
 			#########################################################################
 			#                       END OF YOUR CODE                                #
 			#########################################################################
@@ -67,7 +69,7 @@ class LinearClassifier(object):
 			# TODO:                                                                 #
 			# Update the weights using the gradient and the learning rate.          #
 			#########################################################################
-			pass
+			self.W = self.W - learning_rate * grad
 			#########################################################################
 			#                       END OF YOUR CODE                                #
 			#########################################################################
@@ -77,31 +79,32 @@ class LinearClassifier(object):
 
 		return loss_history
 
-	def predict(self, X):
+	def predict(self, XT):
 		"""
 		Use the trained weights of this linear classifier to predict labels for
 		data points.
 
 		Inputs:
-		- X: A numpy array of shape (N, D) containing training data; there are N
+		- XT: A numpy array of shape (N, D) containing training data; there are N
 			training samples each of dimension D.
 
 		Returns:
-		- y_pred: Predicted labels for the data in X. y_pred is a 1-dimensional
+		- y_pred: Predicted labels for the data in XT. y_pred is a 1-dimensional
 			array of length N, and each element is an integer giving the predicted
 			class.
 		"""
-		y_pred = np.zeros(X.shape[0])
+		y_pred = np.zeros(XT.shape[0])
 		###########################################################################
 		# TODO:                                                                   #
 		# Implement this method. Store the predicted labels in y_pred.            #
 		###########################################################################
-		pass
+		Y = XT.dot(W)
+		y_pred = Y.argmax(axis=1)
 		###########################################################################
 		#                           END OF YOUR CODE                              #
 		###########################################################################
 		return y_pred
-	
+
 	def loss(self, X_batch, y_batch, reg):
 		"""
 		Compute the loss function and its derivative. 
