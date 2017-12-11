@@ -71,20 +71,24 @@ def svm_loss_vectorized(W, XT, y, reg):
 	# result in loss.                                                           #
 	#############################################################################
 	YT = XT.dot(W)
-
+	LT = YT
+	#SVM
 	grad_YT = np.zeros_like(YT)
 
-	score_max = np.max(YT, axis=1).reshape(N, 1)
-	prob = np.exp(YT - score_max) / np.sum(np.exp(YT - score_max), axis=1).reshape(N, 1)
-	true_class = np.zeros_like(prob)
-	true_class[np.arange(N), y] = 1
-	LT = -np.log(prob) * true_class
-	grad_YT = -(true_class - prob)
+	# use the vector feature in numpy
+	right_scores = YT[np.arange(N), y].reshape(N, 1)
+	LT = YT - right_scores + 1.0
+	LT[np.arange(N), y] = 0.0
+	LT[LT <= 0.0] = 0.0
+	grad_YT = LT
+	grad_YT[grad_YT > 0.0] = 1
+	row_sum = np.sum(grad_YT, axis=1)
+	grad_YT[np.arange(N), y] = -row_sum
 
 	LT = (1 / N) * LT
 	grad_YT = (1 / N) * grad_YT
 
-	# add the regularization
+	#add the regularization
 	RW = W ** 2
 	loss = LT.sum() + reg * RW.sum()
 	#############################################################################
