@@ -56,8 +56,6 @@ def softmax_loss_vectorized(W, XT, y, reg):
 	#############################################################################
 	YT = XT.dot(W)
 
-	grad_YT = np.zeros_like(YT)
-
 	score_max = np.max(YT, axis=1).reshape(N, 1)
 	prob = np.exp(YT - score_max) / np.sum(np.exp(YT - score_max), axis=1).reshape(N, 1)
 	true_class = np.zeros_like(prob)

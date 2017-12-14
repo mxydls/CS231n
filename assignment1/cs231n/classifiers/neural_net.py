@@ -98,7 +98,6 @@ class TwoLayerNet(object):
 		# classifier loss.                                                          #
 		#############################################################################
 		YT = scores
-		dScores = np.zeros_like(YT)
 
 		score_max = np.max(YT, axis=1).reshape(N, 1)
 		prob = np.exp(YT - score_max) / np.sum(np.exp(YT - score_max), axis=1).reshape(N, 1)
