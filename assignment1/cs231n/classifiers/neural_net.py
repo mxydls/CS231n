@@ -77,10 +77,9 @@ class TwoLayerNet(object):
 		# shape (N, C).                                                             #
 		#############################################################################
 		hidden_scores = XT.dot(W1) + b1
-		relu_valid = hidden_scores > 0	#the positions that value > 0
-		hidden_relu = hidden_scores * relu_valid
-		output_scores = hidden_relu.dot(W2) + b2
-		scores = output_scores
+		relu_mask = hidden_scores > 0	#the positions that value > 0
+		hidden_relu = hidden_scores * relu_mask
+		scores = hidden_relu.dot(W2) + b2
 		#############################################################################
 		#                              END OF YOUR CODE                             #
 		#############################################################################
@@ -99,27 +98,24 @@ class TwoLayerNet(object):
 		#############################################################################
 		YT = scores
 
+		#softmax
 		score_max = np.max(YT, axis=1).reshape(N, 1)
 		prob = np.exp(YT - score_max) / np.sum(np.exp(YT - score_max), axis=1).reshape(N, 1)
 		true_class = np.zeros_like(prob)
 		true_class[np.arange(N), y] = 1
-		LT = -np.log(prob) * true_class
+		LT = -np.log(prob) * true_class / N
 
 		#dScores = d(loss) / d(scores)
-		dScores = -(true_class - prob)
-
-		LT = (1 / N) * LT
-		dScores = (1 / N) * dScores
+		dScores = -(true_class - prob) / N
 
 		#dW2 and db2
-		dW2 = XT.T.dot(dScores) + 2 * reg * W2
-		db2 = np.sum(dScores, axis = 0, keepdims = True) / N
-
-		dRelu = dScores.dot(W2.T) * relu_valid
+		dW2 = hidden_relu.T.dot(dScores) + 2 * reg * W2
+		dHiddenRelu = dScores.dot(W2.T) * relu_mask
+		db2 = np.sum(dScores, axis = 0)
 
 		#dW1 and db1
-		dW1 = XT.T.dot(dRelu) + 2 * reg * W1
-		db1 = np.sum(dRelu, axis = 0, keepdims = True)
+		dW1 = XT.T.dot(dHiddenRelu) + 2 * reg * W1
+		db1 = np.sum(dHiddenRelu, axis = 0)
 
 		#add the regularization
 		RW1, RW2 = W1 ** 2, W2 ** 2
@@ -245,7 +241,7 @@ class TwoLayerNet(object):
 		W2 = self.params['W2']
 		b2 = self.params['b2']
 
-		hidden_X = np.maximum(0,(X.dot(W1) + b1))
+		hidden_X = np.maximum(0,(XT.dot(W1) + b1))
 		output = hidden_X.dot(W2) + b2
 		y_pred = np.argmax(output, axis = 1)
 		###########################################################################

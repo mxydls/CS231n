@@ -2,7 +2,7 @@ import numpy as np
 from random import shuffle
 from past.builtins import xrange
 
-def softmax_loss_naive(W, XT, y, reg):
+def softmax_loss_naive(W, X, y, reg):
 	"""
 	Softmax loss function, naive implementation (with loops)
 
@@ -30,7 +30,17 @@ def softmax_loss_naive(W, XT, y, reg):
 	# here, it is easy to run into numeric instability. Don't forget the        #
 	# regularization!                                                           #
 	#############################################################################
-	pass
+	N, C = X.shape[0], W.shape[1]
+	for i in range(N):
+		f = np.dot(X[i], W)
+		f -= np.max(f) # f.shape = C
+		loss = loss + np.log(np.sum(np.exp(f))) - f[y[i]]
+		dW[:, y[i]] -= X[i]
+		s = np.exp(f).sum()
+		for j in range(C):
+			dW[:, j] += np.exp(f[j]) / s * X[i]
+	loss = loss / N + reg * np.sum(W * W)
+	dW = dW / N + 2 * reg * W
 	#############################################################################
 	#                          END OF YOUR CODE                                 #
 	#############################################################################
@@ -54,6 +64,7 @@ def softmax_loss_vectorized(W, XT, y, reg):
 	# here, it is easy to run into numeric instability. Don't forget the        #
 	# regularization!                                                           #
 	#############################################################################
+	N = XT.shape[0]
 	YT = XT.dot(W)
 
 	score_max = np.max(YT, axis=1).reshape(N, 1)

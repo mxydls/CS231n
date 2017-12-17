@@ -7,12 +7,12 @@ def svm_loss_naive(W, X, y, reg):
 	Structured SVM loss function, naive implementation (with loops).
 
 	Inputs have dimension D, there are C classes, and we operate on minibatches
-	of N examples.
+	of num_train examples.
 
 	Inputs:
 	- W: A numpy array of shape (D, C) containing weights.
-	- X: A numpy array of shape (N, D) containing a minibatch of data.
-	- y: A numpy array of shape (N,) containing training labels; y[i] = c means
+	- X: A numpy array of shape (num_train, D) containing a minibatch of data.
+	- y: A numpy array of shape (num_train,) containing training labels; y[i] = c means
 		that X[i] has label c, where 0 <= c < C.
 	- reg: (float) regularization strength
 
@@ -20,9 +20,7 @@ def svm_loss_naive(W, X, y, reg):
 	- loss as single float
 	- gradient with respect to weights W; an array of same shape as W
 	"""
-	dW = np.zeros(W.shape) # initialize the gradient as zero
-
-	# compute the loss and the gradient
+	dW = np.zeros(W.shape)
 	num_classes = W.shape[1]
 	num_train = X.shape[0]
 	loss = 0.0
@@ -35,13 +33,17 @@ def svm_loss_naive(W, X, y, reg):
 			margin = scores[j] - correct_class_score + 1 # note delta = 1
 			if margin > 0:
 				loss += margin
+				dW[:, j] += X[i]
+				dW[:, y[i]] -= X[i]
 
 	# Right now the loss is a sum over all training examples, but we want it
 	# to be an average instead so we divide by num_train.
 	loss /= num_train
-
+	dW /= num_train
+	
 	# Add regularization to the loss.
 	loss += reg * np.sum(W * W)
+	dW += 2 * reg * W
 
 	#############################################################################
 	# TODO:                                                                     #
@@ -72,25 +74,27 @@ def svm_loss_vectorized(W, XT, y, reg):
 	#############################################################################
 	YT = XT.dot(W)
 	LT = YT
+	num_train = XT.shape[0]
 	#SVM
 	grad_YT = np.zeros_like(YT)
 
 	# use the vector feature in numpy
-	right_scores = YT[np.arange(N), y].reshape(N, 1)
+	right_scores = YT[np.arange(num_train), y].reshape(-1, 1)
 	LT = YT - right_scores + 1.0
-	LT[np.arange(N), y] = 0.0
-	LT[LT <= 0.0] = 0.0
-	grad_YT = LT
-	grad_YT[grad_YT > 0.0] = 1
-	row_sum = np.sum(grad_YT, axis=1)
-	grad_YT[np.arange(N), y] = -row_sum
+	LT[np.arange(num_train), y] = 0.0
+	LT = LT * (LT > 0.0)
 
-	LT = (1 / N) * LT
-	grad_YT = (1 / N) * grad_YT
+	LT = (1 / num_train) * LT
 
 	#add the regularization
 	RW = W ** 2
 	loss = LT.sum() + reg * RW.sum()
+
+	grad_YT = LT
+	grad_YT[grad_YT > 0.0] = 1
+	row_sum = np.sum(grad_YT, axis=1)
+	grad_YT[np.arange(num_train), y] = -row_sum
+	grad_YT = (1 / num_train) * grad_YT
 	#############################################################################
 	#                             END OF YOUR CODE                              #
 	#############################################################################
